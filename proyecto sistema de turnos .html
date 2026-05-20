@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Turnos</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #141e30, #243b55);
+            min-height: 100vh;
+            padding: 30px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 40px;
+            color: #00e5ff;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #00e5ff;
+        }
+
+        .inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+            gap: 15px;
+        }
+
+        input, select {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #00e5ff;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00b8d4;
+            transform: scale(1.03);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th {
+            background: #00e5ff;
+            color: black;
+            padding: 12px;
+        }
+
+        table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .estado {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .reservado {
+            background: orange;
+            color: black;
+        }
+
+        .espera {
+            background: yellow;
+            color: black;
+        }
+
+        .atendido {
+            background: #00ff95;
+            color: black;
+        }
+
+        .cancelado {
+            background: red;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>SISTEMA DE GESTIÓN DE TURNOS</h1>
+
+    <div class="card">
+        <h2>Registrar Persona</h2>
+
+        <div class="inputs">
+            <input type="text" id="nombre" placeholder="Nombre">
+            <input type="email" id="correo" placeholder="Correo">
+            <input type="text" id="documento" placeholder="Número Documento">
+        </div>
+
+        <button onclick="registrarPersona()">
+            Registrar Persona
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Crear Turno</h2>
+
+        <div class="inputs">
+            <input type="text" id="personaTurno" placeholder="Nombre Persona">
+
+            <select id="categoria">
+                <option>General</option>
+                <option>Prioritario</option>
+                <option>Estudiante</option>
+                <option>Administrativo</option>
+            </select>
+
+            <select id="estado">
+                <option>Reservado</option>
+                <option>En espera</option>
+                <option>Atendido</option>
+                <option>Cancelado</option>
+            </select>
+        </div>
+
+        <button onclick="crearTurno()">
+            Crear Turno
+        </button>
+    </div>
+
+    <div class="card">
+        <h2>Lista de Turnos</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Persona</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaTurnos">
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+    let personas = [];
+    let turnos = [];
+    let contador = 1;
+
+    function registrarPersona() {
+
+        let nombre = document.getElementById('nombre').value;
+        let correo = document.getElementById('correo').value;
+        let documento = document.getElementById('documento').value;
+
+        if(nombre === '' || correo === '' || documento === '') {
+            alert('Complete todos los campos');
+            return;
+        }
+
+        let persona = {
+            id: personas.length + 1,
+            nombre,
+            correo,
+            documento
+        };
+
+        personas.push(persona);
+
+        alert('Persona registrada correctamente');
+
+        document.getElementById('nombre').value = '';
+        document.getElementById('correo').value = '';
+        document.getElementById('documento').value = '';
+    }
+
+    function crearTurno() {
+
+        let persona = document.getElementById('personaTurno').value;
+        let categoria = document.getElementById('categoria').value;
+        let estado = document.getElementById('estado').value;
+
+        if(persona === '') {
+            alert('Ingrese el nombre de la persona');
+            return;
+        }
+
+        let turno = {
+            id: contador++,
+            persona,
+            categoria,
+            estado
+        };
+
+        turnos.push(turno);
+
+        mostrarTurnos();
+
+        document.getElementById('personaTurno').value = '';
+    }
+
+    function mostrarTurnos() {
+
+        let tabla = document.getElementById('tablaTurnos');
+
+        tabla.innerHTML = '';
+
+        turnos.forEach((turno, index) => {
+
+            let claseEstado = '';
+
+            if(turno.estado === 'Reservado') {
+                claseEstado = 'reservado';
+            }
+            else if(turno.estado === 'En espera') {
+                claseEstado = 'espera';
+            }
+            else if(turno.estado === 'Atendido') {
+                claseEstado = 'atendido';
+            }
+            else {
+                claseEstado = 'cancelado';
+            }
+
+            tabla.innerHTML += `
+                <tr>
+                    <td>${turno.id}</td>
+                    <td>${turno.persona}</td>
+                    <td>${turno.categoria}</td>
+                    <td>
+                        <span class="estado ${claseEstado}">
+                            ${turno.estado}
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="atenderTurno(${index})">
+                            Atender
+                        </button>
+
+                        <button onclick="cancelarTurno(${index})">
+                            Cancelar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function atenderTurno(index) {
+
+        turnos[index].estado = 'Atendido';
+
+        mostrarTurnos();
+    }
+
+    function cancelarTurno(index) {
+
+        turnos[index].estado = 'Cancelado';
+
+        mostrarTurnos();
+    }
+
+</script>
+
+</body>
+</html>
+
+<!--
+=====================================================
+SPRING BOOT + AXIOS
+=====================================================
+
+1. CREAR PROYECTO SPRING BOOT
+
+Ir a:
+https://start.spring.io
+
+Dependencias:
+- Spring Web
+- Spring Data JPA
+- MySQL Driver
+- Lombok
+
+=====================================================
+ESTRUCTURA DEL PROYECTO
+=====================================================
+
+src/main/java/com/turnos/
+│
+├── controller
+├── model
+├── repository
+└── GestionTurnosApplication.java
+
+=====================================================
+application.properties
+=====================================================
+
+spring.datasource.url=jdbc:mysql://localhost:3306/gestion_turnos
+spring.datasource.username=root
+spring.datasource.password=123456
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.port=8080
+
+=====================================================
+Persona.java
+=====================================================
+
+package com.turnos.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Persona {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nombre;
+    private String correo;
+    private String numeroDocumento;
+}
+
+=====================================================
+Turno.java
+=====================================================
+
+package com.turnos.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Turno {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String persona;
+    private String categoria;
+    private String estado;
+}
+
+=====================================================
+PersonaRepository.java
+=====================================================
+
+package com.turnos.repository;
+
+import com.turnos.model.Persona;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PersonaRepository extends JpaRepository<Persona, Long> {
+}
+
+=====================================================
+TurnoRepository.java
+=====================================================
+
+package com.turnos.repository;
+
+import com.turnos.model.Turno;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TurnoRepository extends JpaRepository<Turno, Long> {
+}
+
+=====================================================
+PersonaController.java
+=====================================================
+
+package com.turnos.controller;
+
+import com.turnos.model.Persona;
+import com.turnos.repository.PersonaRepository;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/personas")
+@CrossOrigin("*")
+public class PersonaController {
+
+    private final PersonaRepository repository;
+
+    public PersonaController(PersonaRepository repository) {
+        this.repository = repository;
+    }
+
+    @PostMapping
+    public Persona guardar(@RequestBody Persona persona) {
+        return repository.save(persona);
+    }
+
+    @GetMapping
+    public List<Persona> listar() {
+        return repository.findAll();
+    }
+}
+
+=====================================================
+TurnoController.java
+=====================================================
+
+package com.turnos.controller;
+
+import com.turnos.model.Turno;
+import com.turnos.repository.TurnoRepository;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/turnos")
+@CrossOrigin("*")
+public class TurnoController {
+
+    private final TurnoRepository repository;
+
+    public TurnoController(TurnoRepository repository) {
+        this.repository = repository;
+    }
+
+    @PostMapping
+    public Turno guardar(@RequestBody Turno turno) {
+        return repository.save(turno);
+    }
+
+    @GetMapping
+    public List<Turno> listar() {
+        return repository.findAll();
+    }
+}
+
+=====================================================
+AXIOS EN EL HTML
+=====================================================
+
+Agregar antes de cerrar body:
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+=====================================================
+REGISTRAR PERSONA CON AXIOS
+=====================================================
+
+async function registrarPersona() {
+
+    let persona = {
+        nombre: document.getElementById('nombre').value,
+        correo: document.getElementById('correo').value,
+        numeroDocumento: document.getElementById('documento').value
+    };
+
+    await axios.post('http://localhost:8080/personas', persona);
+
+    alert('Persona registrada en Spring Boot');
+}
+
+=====================================================
+CREAR TURNO CON AXIOS
+=====================================================
+
+async function crearTurno() {
+
+    let turno = {
+        persona: document.getElementById('personaTurno').value,
+        categoria: document.getElementById('categoria').value,
+        estado: document.getElementById('estado').value
+    };
+
+    await axios.post('http://localhost:8080/turnos', turno);
+
+    listarTurnos();
+}
+
+=====================================================
+LISTAR TURNOS CON AXIOS
+=====================================================
+
+async function listarTurnos() {
+
+    const respuesta = await axios.get('http://localhost:8080/turnos');
+
+    let tabla = document.getElementById('tablaTurnos');
+
+    tabla.innerHTML = '';
+
+    respuesta.data.forEach(turno => {
+
+        tabla.innerHTML += `
+            <tr>
+                <td>${turno.id}</td>
+                <td>${turno.persona}</td>
+                <td>${turno.categoria}</td>
+                <td>${turno.estado}</td>
+            </tr>
+        `;
+    });
+}
+
+=====================================================
+EJECUTAR EL BACKEND
+=====================================================
+
+mvn spring-boot:run
+
+=====================================================
+ABRIR HTML
+=====================================================
+
+Usar Live Server en Visual Studio Code.
+
+=====================================================
+FUNCIONALIDADES
+=====================================================
+
+✔ Registrar personas
+✔ Crear turnos
+✔ Consultar turnos
+✔ Spring Boot
+✔ Axios
+✔ MySQL
+✔ HTML + CSS + JavaScript
+✔ Cola FIFO
+✔ Listas enlazadas
+✔ Arreglos
+
+-->
